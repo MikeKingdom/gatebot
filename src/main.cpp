@@ -1,26 +1,9 @@
 #include <Arduino.h>
-#include "leds.h"
-#include "motors.h"
+#include "config.h"
 #include "InputDebounce.h"
-
-// Motor control
-#define LEFT_ENABLE 3
-#define LEFT_PIN_1 6
-#define LEFT_PIN_2 5
-#define RIGHT_ENABLE 9
-#define RIGHT_PIN_1 7
-#define RIGHT_PIN_2 8 
-
-#define FRONT_IR_PIN A0
-#define BACK_IR_PIN A1
-#define SPEED_PIN A6
-#define BAT_PIN A7
-#define LED_PIN 2
-#define BTN_PIN 4
-
-#define BAT_3VPERCELL_READING 782
-#define BAT_42VPERCELL_READING 1023
-#define BAT_MIN_PERCENT 40
+#include "leds.h"
+#include "chassis.h"
+#include "battery.h"
 
 #define STATE_OFF 0
 #define STATE_STOP 1
@@ -28,19 +11,21 @@
 #define STATE_BACKWARD 3
 #define STATE_ROTATE 4
 
-#define BUTTON_DEBOUNCE_DELAY   20   // [ms]
-
 int state = STATE_STOP;
 
 static InputDebounce btn;
-static Motors motors;
+static Motor leftMotor(LEFT_ENABLE, LEFT_PIN_1, LEFT_PIN_2);
+static Motor rightMotor(RIGHT_ENABLE, RIGHT_PIN_1, RIGHT_PIN_2);
+static Chassis chassis(leftMotor, rightMotor);
+static Battery battery;
+static LEDs leds;
 
 void handleBtnPressed(uint8_t pinIn) {
   // Serial.println("Button Pressed");
 }
 
 void handleBtnReleased(uint8_t pinIn) {
-  nextPattern();
+  leds.nextPattern();
 }
 
 void handleBtnPressedDuration(uint8_t pinIn, unsigned long duration) {
@@ -64,64 +49,49 @@ void setState(int newState) {
     case STATE_OFF:
       state = newState;
       Serial.println("OFF");
-      motors.stop();
+      chassis.stop();
       break;
     case STATE_STOP:
       state = newState;
       Serial.println("Stop");
-      motors.stop();
+      chassis.stop();
       break;
     case STATE_FORWARD:
       state = newState;
       Serial.println("Forward");
-      motors.forward();
+      chassis.forward();
       break;
     case STATE_BACKWARD:
       state = newState;
       Serial.println("Backward");
-      motors.backward();
+      chassis.backward();
       break;
     case STATE_ROTATE:
       state = newState;
       Serial.println("Rotate");
-      motors.rotateLeft();
+      chassis.rotateLeft();
       break;
   }
 }
 
 void updatePower() {
   int power = map(analogRead(SPEED_PIN), 0, 1023, 0, 255);
-  motors.leftPower(power);
-  motors.rightPower(power);
+  chassis.power(power);
 }
 
-void checkBattery() {
-  int battery = analogRead(BAT_PIN);
-  int batteryPercent = map(battery, 
-    BAT_3VPERCELL_READING, BAT_42VPERCELL_READING,
-    0, 100);
-  Serial.print("Battery ");
-  Serial.print(batteryPercent);
-  Serial.print("% (");
-  Serial.print(battery);
-  Serial.println(")");
-  if (batteryPercent < BAT_MIN_PERCENT) {
-    Serial.print("Battery is too low ");
-    Serial.print(batteryPercent);
-    Serial.println("%. Turning off.");
-    setState(STATE_OFF);
-    FastLED.clear(true);
-    FastLED.show();
-  }
+void onBatteryLow(int value, int percent) {
+  setState(STATE_OFF);
+  FastLED.clear(true);
+  FastLED.show();
 }
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
-  motors.setup(LEFT_ENABLE, LEFT_PIN_1, LEFT_PIN_2, RIGHT_ENABLE, RIGHT_PIN_1, RIGHT_PIN_2);
+  chassis.setup();
+  battery.setup(BAT_PIN, onBatteryLow);
   pinMode(FRONT_IR_PIN, INPUT);
   pinMode(BACK_IR_PIN, INPUT);
   pinMode(SPEED_PIN, INPUT);
-  pinMode(BAT_PIN, INPUT);
   pinMode(BTN_PIN, INPUT_PULLUP);
 
   Serial.begin(9600);
@@ -129,7 +99,7 @@ void setup() {
   btn.registerCallbacks(handleBtnPressed, handleBtnReleased, handleBtnPressedDuration, handleBtnReleasedDuration);
   btn.setup(BTN_PIN, BUTTON_DEBOUNCE_DELAY, InputDebounce::PIM_INT_PULL_UP_RES);
 
-  ledSetup();
+  leds.setup();
   
   delay(500);
   updatePower();
@@ -140,21 +110,18 @@ void setup() {
   // potTest();
 }
 
-uint8_t lastBtn = LOW;
-
 void loop() {
   unsigned long now = millis();
 
-  /*
   EVERY_N_SECONDS(10) {
-    checkBattery();
+    battery.process();
   }
-*/
+
   btn.process(now);
 
   if (state != STATE_OFF) {
-  /*
     updatePower();
+
     switch (state) {
       case STATE_FORWARD:
         if (digitalRead(FRONT_IR_PIN) == LOW) {
@@ -170,11 +137,7 @@ void loop() {
           setState(STATE_FORWARD);
         }
     }
-  */
   
-    ledProcess();
-
-    // EVERY_N_SECONDS( 10 ) { nextPattern(); } // change patterns periodically
-
+    leds.process();
   }
 }
