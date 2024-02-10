@@ -10,8 +10,31 @@ void sinelon(CRGB *leds, uint8_t hue);
 void juggle(CRGB *leds, uint8_t hue);
 void juggle(CRGB *leds, uint8_t hue);
 void bpm(CRGB *leds, uint8_t hue);
+void solid(CRGB *leds, uint8_t hue);
+void solid0(CRGB *leds, uint8_t hue);
+void solid1(CRGB *leds, uint8_t hue);
+void solid2(CRGB *leds, uint8_t hue);
+void solid3(CRGB *leds, uint8_t hue);
+void solid4(CRGB *leds, uint8_t hue);
+void solid5(CRGB *leds, uint8_t hue);
+void solid6(CRGB *leds, uint8_t hue);
+void solid7(CRGB *leds, uint8_t hue);
+void solid8(CRGB *leds, uint8_t hue);
+void solid9(CRGB *leds, uint8_t hue);
+void solidA(CRGB *leds, uint8_t hue);
+void solidB(CRGB *leds, uint8_t hue);
+void solidC(CRGB *leds, uint8_t hue);
+void solidD(CRGB *leds, uint8_t hue);
+void solidE(CRGB *leds, uint8_t hue);
+void solidF(CRGB *leds, uint8_t hue);
 
-SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
+SimplePatternList gPatterns = {
+  rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm,
+  solid0, solid1, solid2, solid3,
+  solid4, solid5, solid6, solid7,
+  solid8, solid9, solidA, solidB,
+  solidC, solidD, solidE, solidF
+};
 
 LEDs::LEDs()
 {
@@ -27,7 +50,7 @@ void LEDs::process()
     _gHue++;  // slowly cycle the "base color" through the rainbow
     //Serial.print("gHue ");
     //Serial.println(_gHue);
-    gPatterns[gCurrentPatternNumber](leds, _gHue);
+    gPatterns[_currentPatternNumber](leds, _gHue);
     FastLED.show();
   }
 
@@ -44,14 +67,23 @@ void LEDs::setup()
   FastLED.setMaxPowerInVoltsAndMilliamps(5,1500);
   FastLED.setBrightness(INIT_BRIGHTNESS);
 
-  rainbow(leds, _gHue);
+  gPatterns[_currentPatternNumber](leds, _gHue);
   FastLED.show();
 }
 
 void LEDs::nextPattern()
 {
   // add one to the current pattern number, and wrap around at the end
-  gCurrentPatternNumber = (gCurrentPatternNumber + 1) % ARRAY_SIZE( gPatterns);
+  _currentPatternNumber = (_currentPatternNumber + 1) % ARRAY_SIZE( gPatterns);
+}
+
+void LEDs::setPatternNumber(uint8_t index)
+{
+  _currentPatternNumber = index % ARRAY_SIZE( gPatterns);
+}
+
+uint8_t LEDs::getPatternNumber() {
+  return _currentPatternNumber;
 }
 
 void rainbow(CRGB *leds, uint8_t hue)
@@ -101,7 +133,8 @@ void bpm(CRGB *leds, uint8_t hue)
   }
 }
  
-void juggle(CRGB *leds, uint8_t hue) {
+void juggle(CRGB *leds, uint8_t hue)
+{
   // eight colored dots, weaving in and out of sync with each other
   fadeToBlackBy( leds, NUM_LEDS, 20);
   uint8_t dothue = 0;
@@ -109,4 +142,78 @@ void juggle(CRGB *leds, uint8_t hue) {
     leds[beatsin16( i+7, 0, NUM_LEDS-1 )] |= CHSV(dothue, 200, 255);
     dothue += 32;
   }
+}
+
+void solid(CRGB *leds, uint8_t hue)
+{
+  uint8_t brightness = 255;
+
+  for( int i = 0; i < NUM_LEDS; ++i) {
+    leds[i] = ColorFromPalette( PartyColors_p, hue, brightness, NOBLEND);
+  }
+}
+
+void solid0(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 0);
+}
+void solid1(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 1*16);
+}
+void solid2(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 2*16);
+}
+void solid3(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 3*16);
+}
+void solid4(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 4*16);
+}
+void solid5(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 5*16);
+}
+void solid6(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 6*16);
+}
+void solid7(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 7*16);
+}
+void solid8(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 8*16);
+}
+void solid9(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 9*16);
+}
+void solidA(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 10*16);
+}
+void solidB(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 11*16);
+}
+void solidC(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 12*16);
+}
+void solidD(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 13*16);
+}
+void solidE(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 14*16);
+}
+void solidF(CRGB *leds, uint8_t hue)
+{
+  solid(leds, 15*16);
 }

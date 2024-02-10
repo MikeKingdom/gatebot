@@ -17,12 +17,13 @@ public:
   void setup();
   void process();
   void nextPattern();
+  void setPatternNumber(uint8_t index);
+  uint8_t getPatternNumber();
 
 private:
   CRGB leds[NUM_LEDS];
  
- 
-  uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
+  uint8_t _currentPatternNumber = 0; // Index number of which pattern is current
   uint8_t _gHue = 0; // rotating "base color" used by many of the patterns
 
 };

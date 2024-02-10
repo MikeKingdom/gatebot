@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <EEPROM.h>
+
 #include "config.h"
 #include "InputDebounce.h"
 #include "leds.h"
@@ -20,12 +22,26 @@ static Chassis chassis(leftMotor, rightMotor);
 static Battery battery;
 static LEDs leds;
 
+// EEPROM Setup
+#define EP_ADDRESS         0
+struct ep_contents
+{
+  byte saved = 0;
+  byte pattern = 0;
+};
+typedef struct ep_contents ep_contents;
+ep_contents epData;
+
 void handleBtnPressed(uint8_t pinIn) {
   // Serial.println("Button Pressed");
 }
 
 void handleBtnReleased(uint8_t pinIn) {
   leds.nextPattern();
+  // save the current pattern index in EEPROM
+  epData.saved = 1;
+  epData.pattern = leds.getPatternNumber();
+  EEPROM.put(EP_ADDRESS, epData);
 }
 
 void handleBtnPressedDuration(uint8_t pinIn, unsigned long duration) {
@@ -96,6 +112,17 @@ void setup() {
 
   Serial.begin(9600);
 
+  EEPROM.get(EP_ADDRESS, epData);
+  Serial.print("epData saved=");
+  Serial.print(epData.saved);
+  Serial.print(" pattern=");
+  Serial.println(epData.pattern);
+  if (epData.saved == 1) {
+    // 255 is erased state. no settings saved)
+    // If any other value is written, it is not erased and therefore settings are saved.
+    leds.setPatternNumber(epData.pattern);
+  }
+
   btn.registerCallbacks(handleBtnPressed, handleBtnReleased, handleBtnPressedDuration, handleBtnReleasedDuration);
   btn.setup(BTN_PIN, BUTTON_DEBOUNCE_DELAY, InputDebounce::PIM_INT_PULL_UP_RES);
 
@@ -120,7 +147,9 @@ void loop() {
   btn.process(now);
 
   if (state != STATE_OFF) {
-    updatePower();
+    EVERY_N_SECONDS(1) {
+      updatePower();
+    }
 
     switch (state) {
       case STATE_FORWARD:
@@ -137,7 +166,7 @@ void loop() {
           setState(STATE_FORWARD);
         }
     }
-  
+
     leds.process();
   }
 }
