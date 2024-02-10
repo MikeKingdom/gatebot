@@ -1,90 +1,44 @@
+#ifndef _MOTORS_H
+#define _MOTORS_H
+
 #include <Arduino.h>
 
 #define ENABLE_MOTORS 1
 
-// Motor control
-#define LEFT_ENABLE 3
-#define LEFT_PIN_1 6
-#define LEFT_PIN_2 5
-#define RIGHT_ENABLE 9
-#define RIGHT_PIN_1 7
-#define RIGHT_PIN_2 8 
 
-void motorSetup() {
-  pinMode(LEFT_PIN_1, OUTPUT);
-  pinMode(LEFT_PIN_2, OUTPUT);
-  pinMode(RIGHT_ENABLE, OUTPUT);
-  pinMode(RIGHT_PIN_1, OUTPUT);
-  pinMode(RIGHT_PIN_2, OUTPUT);
-  digitalWrite(LEFT_PIN_1, LOW);
-  digitalWrite(LEFT_PIN_2, LOW);
-  digitalWrite(RIGHT_PIN_1, LOW);
-  digitalWrite(RIGHT_PIN_2, LOW);
-}
+class Motors
+{
+public:
+  explicit Motors(uint8_t leftEnable = -1, uint8_t leftPin1 = -1, uint8_t leftPin2 = -1,
+    uint8_t rightEnable = -1, uint8_t rightPin1 = -1, uint8_t rightPin2 = -1);
+  virtual ~Motors();
 
-void leftForward() {
-  digitalWrite(LEFT_PIN_1, HIGH & ENABLE_MOTORS );
-  digitalWrite(LEFT_PIN_2, LOW);
-}
+  void setup(uint8_t leftEnable, uint8_t leftPin1, uint8_t leftPin2, uint8_t rightEnable, uint8_t rightPin1, uint8_t rightPin2);
 
-void leftBackward() {
-  digitalWrite(LEFT_PIN_1, LOW);
-  digitalWrite(LEFT_PIN_2, HIGH & ENABLE_MOTORS);
-}
+  void leftForward();
+  void leftBackward();
+  void leftOff();
+  void leftPower(byte power);
+  void rightForward();
+  void rightBackward();
+  void rightOff();
+  void rightPower(byte power);
+  
+  void forward();
+  void backward();
+  void rotateLeft();
+  void rotateRight();
+  void stop();
 
-void leftOff() {
-  digitalWrite(LEFT_PIN_1, LOW);
-  digitalWrite(LEFT_PIN_2, LOW);
-}
+private:
+  uint8_t _leftEnable;
+  uint8_t _leftPin1;
+  uint8_t _leftPin2;
+  uint8_t _rightEnable;
+  uint8_t _rightPin1;
+  uint8_t _rightPin2;
 
-void leftPower(byte power) {
-  analogWrite(LEFT_ENABLE, power);
-}
-
-void rightPower(byte power) {
-  analogWrite(RIGHT_ENABLE, power);
-}
-
-void rightForward() {
-  digitalWrite(RIGHT_PIN_1, HIGH & ENABLE_MOTORS);
-  digitalWrite(RIGHT_PIN_2, LOW);
-}
-
-void rightBackward() {
-  digitalWrite(RIGHT_PIN_1, LOW);
-  digitalWrite(RIGHT_PIN_2, HIGH & ENABLE_MOTORS);
-}
-
-void rightOff() {
-  digitalWrite(RIGHT_PIN_1, LOW);
-  digitalWrite(RIGHT_PIN_2, LOW);
-}
-
-void forward() {
-  leftForward();
-  rightForward();
-}
-
-void backward() {
-  leftBackward();
-  rightBackward();
-}
-
-void rotateLeft() {
-  leftBackward();
-  rightForward();
-}
-
-void rotateRight() {
-  leftForward();
-  rightBackward();
-}
-
-void stop() {
-  leftOff();
-  rightOff();
-}
-
+/*
 void leftTest() {
   leftPower(255);
   leftForward();
@@ -122,7 +76,6 @@ void moveTest() {
   delay(500);
 }
 
-/*
 void potTest() {
   while(1) {
     Serial.print(map(analogRead(SPEED_PIN), 0, 1023, 0, 255));
@@ -132,3 +85,5 @@ void potTest() {
   }
 }
 */
+};
+#endif // _MOTORS_H

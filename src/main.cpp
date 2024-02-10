@@ -3,6 +3,14 @@
 #include "motors.h"
 #include "InputDebounce.h"
 
+// Motor control
+#define LEFT_ENABLE 3
+#define LEFT_PIN_1 6
+#define LEFT_PIN_2 5
+#define RIGHT_ENABLE 9
+#define RIGHT_PIN_1 7
+#define RIGHT_PIN_2 8 
+
 #define FRONT_IR_PIN A0
 #define BACK_IR_PIN A1
 #define SPEED_PIN A6
@@ -25,6 +33,7 @@
 int state = STATE_STOP;
 
 static InputDebounce btn;
+static Motors motors;
 
 void handleBtnPressed(uint8_t pinIn) {
   // Serial.println("Button Pressed");
@@ -55,35 +64,35 @@ void setState(int newState) {
     case STATE_OFF:
       state = newState;
       Serial.println("OFF");
-      stop();
+      motors.stop();
       break;
     case STATE_STOP:
       state = newState;
       Serial.println("Stop");
-      stop();
+      motors.stop();
       break;
     case STATE_FORWARD:
       state = newState;
       Serial.println("Forward");
-      forward();
+      motors.forward();
       break;
     case STATE_BACKWARD:
       state = newState;
       Serial.println("Backward");
-      backward();
+      motors.backward();
       break;
     case STATE_ROTATE:
       state = newState;
       Serial.println("Rotate");
-      rotateLeft();
+      motors.rotateLeft();
       break;
   }
 }
 
 void updatePower() {
   int power = map(analogRead(SPEED_PIN), 0, 1023, 0, 255);
-  leftPower(power);
-  rightPower(power);
+  motors.leftPower(power);
+  motors.rightPower(power);
 }
 
 void checkBattery() {
@@ -108,8 +117,7 @@ void checkBattery() {
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(LEFT_ENABLE, OUTPUT);
-  motorSetup();
+  motors.setup(LEFT_ENABLE, LEFT_PIN_1, LEFT_PIN_2, RIGHT_ENABLE, RIGHT_PIN_1, RIGHT_PIN_2);
   pinMode(FRONT_IR_PIN, INPUT);
   pinMode(BACK_IR_PIN, INPUT);
   pinMode(SPEED_PIN, INPUT);
